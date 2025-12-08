@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: dashboard.php");
         exit;
     } else {
-        $login_error = 'Username atau Password salah. Coba: admin/admin.';
+        $login_error = 'Username atau Password salah.';
     }
 }
 ?>
