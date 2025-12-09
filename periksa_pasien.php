@@ -27,46 +27,59 @@ if (!$data) {
 
 // 4. PROSES SIMPAN (Saat tombol 'Simpan Pemeriksaan' ditekan)
 if (isset($_POST['simpan_diagnosa'])) {
-    $diagnosa = $_POST['diagnosa'];
-    $obat_dipilih = $_POST['obat']; // Array ID obat
-    $jumlah_obat = $_POST['jumlah']; // Array Jumlah obat
+    $diagnosa = mysqli_real_escape_string($koneksi, $_POST['diagnosa']);
+    
+    // Ambil Array Data Obat
+    $obat_dipilih = isset($_POST['obat']) ? $_POST['obat'] : []; // Array ID obat (Checkbox)
+    $jumlah_obat  = $_POST['jumlah'];       // Array Jumlah obat
+    $aturan_pakai = $_POST['aturan_pakai']; // Array Aturan Pakai (PERBAIKAN DISINI)
 
     // A. Update Tabel Kunjungan (Diagnosa & Status Selesai)
-    $update_kunjungan = "UPDATE kunjungan SET diagnosa = '$diagnosa', status = 'Selesai' WHERE no_kunjungan = '$no_kunjungan'";
+    // Status diubah jadi 'Selesai' (asumsi setelah dokter periksa, pasien lanjut ke kasir/apotek)
+    // Jika alurnya ke Apotek dulu, bisa set status 'Resep' atau 'Menunggu Obat' sesuai kebutuhan sistem Anda.
+    $update_kunjungan = "UPDATE kunjungan SET diagnosa = '$diagnosa', status = 'Menunggu' WHERE no_kunjungan = '$no_kunjungan'";
     mysqli_query($koneksi, $update_kunjungan);
 
     // B. Buat Header Resep Baru
-    // Generate No Resep Unik (Misal: R + Detik saat ini)
-    $no_resep = "R-" . time(); 
-    $tgl_resep = date('Y-m-d');
-    
-    $insert_resep = "INSERT INTO resep (no_resep, no_kunjungan, tgl_resep, status_resep) 
-                     VALUES ('$no_resep', '$no_kunjungan', '$tgl_resep', 'Diproses')";
-    
-    if (mysqli_query($koneksi, $insert_resep)) {
+    // Cek apakah ada obat yang dipilih sebelum membuat resep
+    if (!empty($obat_dipilih)) {
         
-        // C. Simpan Detail Obat (Looping array obat yang dicentang)
-        if (!empty($obat_dipilih)) {
+        $no_resep = "R-" . time(); 
+        $tgl_resep = date('Y-m-d');
+        
+        $insert_resep = "INSERT INTO resep (no_resep, no_kunjungan, tgl_resep, status_resep) 
+                         VALUES ('$no_resep', '$no_kunjungan', '$tgl_resep', 'Diproses')";
+        
+        if (mysqli_query($koneksi, $insert_resep)) {
+            
+            // C. Simpan Detail Obat (Looping array obat yang dicentang)
             foreach ($obat_dipilih as $kode_obat) {
                 $qty = $jumlah_obat[$kode_obat];
+                $aturan = mysqli_real_escape_string($koneksi, $aturan_pakai[$kode_obat]); // Ambil aturan pakai spesifik obat ini
                 
-                // Pastikan quantity tidak 0
+                // Pastikan quantity valid
                 if ($qty > 0) {
-                    // 1. Masukkan ke detail_resep
+                    // 1. Masukkan ke detail_resep dengan Aturan Pakai yang diinput dokter
                     $insert_detail = "INSERT INTO detail_resep (no_resep, kode_obat, jumlah, aturan_pakai) 
-                                      VALUES ('$no_resep', '$kode_obat', '$qty', '3x1 Sesudah Makan')";
-                    mysqli_query($koneksi, $insert_detail);
+                                      VALUES ('$no_resep', '$kode_obat', '$qty', '$aturan')";
+                    
+                    if(!mysqli_query($koneksi, $insert_detail)){
+                        echo "Error Detail: " . mysqli_error($koneksi);
+                    }
 
-                    // 2. Kurangi Stok di Tabel Obat (Fitur Inventory)
+                    // 2. Kurangi Stok di Tabel Obat
                     $update_stok = "UPDATE obat SET stok = stok - $qty WHERE kode_obat = '$kode_obat'";
                     mysqli_query($koneksi, $update_stok);
                 }
             }
+            
+            echo "<script>alert('Pemeriksaan Selesai & Resep Terkirim!'); window.location='dashboard_dokter.php';</script>";
+        } else {
+            echo "Gagal membuat resep: " . mysqli_error($koneksi);
         }
-        
-        echo "<script>alert('Pemeriksaan Selesai! Data tersimpan.'); window.location='dashboard_dokter.php';</script>";
     } else {
-        echo "Gagal membuat resep: " . mysqli_error($koneksi);
+        // Jika tidak ada obat, hanya simpan diagnosa
+        echo "<script>alert('Pemeriksaan Selesai (Tanpa Resep)!'); window.location='dashboard_dokter.php';</script>";
     }
 }
 ?>
@@ -119,37 +132,40 @@ if (isset($_POST['simpan_diagnosa'])) {
                                 <hr>
 
                                 <h5 class="text-primary mb-3">Resep Obat</h5>
-                                <div class="alert alert-info py-2"><small><i class="fas fa-info-circle"></i> Centang obat yang diberikan & isi jumlahnya.</small></div>
+                                <div class="alert alert-info py-2"><small><i class="fas fa-info-circle"></i> Centang obat, isi jumlah, dan aturan pakai.</small></div>
                                 
-                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                                    <table class="table table-bordered table-sm">
+                                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                                    <table class="table table-bordered table-sm align-middle">
                                         <thead class="table-dark sticky-top">
                                             <tr>
-                                                <th width="5%">Pilih</th>
+                                                <th width="5%" class="text-center">Pilih</th>
                                                 <th>Nama Obat</th>
-                                                <th>Stok</th>
-                                                <th width="20%">Jumlah</th>
-                                            </tr>
+                                                <th width="15%">Stok</th>
+                                                <th width="15%">Jumlah</th>
+                                                <th width="30%">Aturan Pakai</th> </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            // Ambil Data Obat dari Database
                                             $q_obat = mysqli_query($koneksi, "SELECT * FROM obat WHERE stok > 0 ORDER BY nama_obat ASC");
                                             while($obat = mysqli_fetch_assoc($q_obat)) {
+                                                $id = $obat['kode_obat'];
                                             ?>
                                             <tr>
                                                 <td class="text-center">
-                                                    <input type="checkbox" name="obat[]" value="<?= $obat['kode_obat']; ?>" class="form-check-input">
+                                                    <input type="checkbox" name="obat[]" value="<?= $id; ?>" class="form-check-input border-secondary">
                                                 </td>
                                                 <td>
-                                                    <?= $obat['nama_obat']; ?> 
-                                                    <small class="text-muted">(<?= $obat['satuan']; ?>)</small>
+                                                    <strong><?= $obat['nama_obat']; ?></strong><br>
+                                                    <small class="text-muted"><?= $obat['satuan']; ?></small>
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <span class="badge bg-secondary"><?= $obat['stok']; ?></span>
                                                 </td>
                                                 <td>
-                                                    <input type="number" name="jumlah[<?= $obat['kode_obat']; ?>]" class="form-control form-control-sm" min="1" max="<?= $obat['stok']; ?>" placeholder="Qty">
+                                                    <input type="number" name="jumlah[<?= $id; ?>]" class="form-control form-control-sm" min="1" max="<?= $obat['stok']; ?>" value="1">
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="aturan_pakai[<?= $id; ?>]" class="form-control form-control-sm" placeholder="Cth: 3x1 Sesudah Makan">
                                                 </td>
                                             </tr>
                                             <?php } ?>
@@ -161,8 +177,8 @@ if (isset($_POST['simpan_diagnosa'])) {
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="dashboard_dokter.php" class="btn btn-secondary me-2">Kembali</a>
-                            <button type="submit" name="simpan_diagnosa" class="btn btn-primary btn-lg" onclick="return confirm('Simpan pemeriksaan ini? Status pasien akan menjadi SELESAI.');">
-                                <i class="fas fa-save me-2"></i> Simpan & Selesaikan
+                            <button type="submit" name="simpan_diagnosa" class="btn btn-primary btn-lg" onclick="return confirm('Simpan pemeriksaan ini?');">
+                                <i class="fas fa-save me-2"></i> Simpan Pemeriksaan
                             </button>
                         </div>
                     </form>
