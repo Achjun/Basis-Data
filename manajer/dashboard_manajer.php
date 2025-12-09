@@ -106,7 +106,7 @@ while ($row = $chart_query->fetch_assoc()) {
             <a href="laporan_keuangan.php" class="list-group-item list-group-item-action bg-dark text-white">
                 <i class="fas fa-money-bill-wave me-2"></i> Laporan Keuangan
             </a>
-            <a href="statistik.php" class="list-group-item list-group-item-action bg-dark text-white">
+            <a href="statistik_kunjungan.php" class="list-group-item list-group-item-action bg-dark text-white">
                 <i class="fas fa-chart-bar me-2"></i> Statistik Kunjungan
             </a>
             <a href="stok_obat.php" class="list-group-item list-group-item-action bg-dark text-white">

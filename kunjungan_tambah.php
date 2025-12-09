@@ -27,30 +27,54 @@ $dokter = mysqli_query($koneksi, "SELECT * FROM dokter");
 $poli   = mysqli_query($koneksi, "SELECT * FROM poli");
 
 // Proses simpan kunjungan
+// Proses simpan kunjungan
+// Proses simpan kunjungan
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $id_pasien = $_POST['no_pasien'];
-    $id_dokter = $_POST['no_dokter'];
-    $id_poli   = $_POST['id_poli'];
-    $tgl       = $_POST['tanggal'];
-    $keluhan   = $_POST['keluhan'];
-
-    // --- UBAH KE MYSQLI: Insert Data ---
-    $sql = "INSERT INTO kunjungan(no_pasien, no_dokter, id_poli, keluhan, tgl_periksa, status)
-            VALUES (?, ?, ?, ?, ?, 'Menunggu')";
-
-    $stmt = mysqli_prepare($koneksi, $sql);
-
-    // Bind parameter: sesuaikan tipe data
-    // s = string, i = integer. Asumsi di sini semuanya dianggap string agar aman
-    // Urutan: no_pasien, no_dokter, id_poli, keluhan, tgl_periksa
-    mysqli_stmt_bind_param($stmt, "sssss", $id_pasien, $id_dokter, $id_poli, $keluhan, $tgl);
-
-    if (mysqli_stmt_execute($stmt)) {
-        echo "<script>alert('Data Berhasil Disimpan!'); window.location='kunjungan_list.php';</script>";
-        exit;
+    // Validasi input
+    if (empty($_POST['no_pasien']) || empty($_POST['no_dokter']) || empty($_POST['tanggal'])) {
+        echo "<script>alert('Harap lengkapi data Pasien, Dokter, dan Tanggal!');</script>";
     } else {
-        echo "Error: " . mysqli_error($koneksi);
+        $id_pasien = $_POST['no_pasien'];
+        $id_dokter = $_POST['no_dokter'];
+        // $id_poli = $_POST['id_poli']; // KITA ABAIKAN INI KARENA TIDAK DISIMPAN KE DB
+        $tgl       = $_POST['tanggal']; // Format dari form biasanya YYYY-MM-DD
+        $keluhan   = $_POST['keluhan'];
+
+        // Tambahkan jam otomatis agar format sesuai datetime (Opsional, tapi disarankan)
+        // Jika input form hanya tanggal, kita set jam ke sekarang atau 08:00
+        $tgl_lengkap = $tgl . " " . date("H:i:s"); 
+
+        // Cek koneksi
+        if (!$koneksi) {
+            die("Koneksi database gagal: " . mysqli_connect_error());
+        }
+
+        // --- QUERY INSERT YANG BENAR (SESUAI FILE SQL ANDA) ---
+        // Kita HAPUS 'id_poli' dari sini karena tabel kunjungan tidak punya kolom itu.
+        $sql = "INSERT INTO kunjungan (no_pasien, no_dokter, tgl_periksa, keluhan, status) 
+                VALUES (?, ?, ?, ?, 'Menunggu')";
+
+        $stmt = mysqli_prepare($koneksi, $sql);
+
+        if ($stmt) {
+            // Bind parameter: 
+            // s (string) -> no_pasien
+            // s (string) -> no_dokter
+            // s (string) -> tgl_periksa
+            // s (string) -> keluhan
+            mysqli_stmt_bind_param($stmt, "ssss", $id_pasien, $id_dokter, $tgl_lengkap, $keluhan);
+
+            if (mysqli_stmt_execute($stmt)) {
+                echo "<script>alert('Data Berhasil Disimpan!'); window.location='kunjungan_list.php';</script>";
+                exit;
+            } else {
+                echo "<div class='alert alert-danger'>Gagal Menyimpan: " . mysqli_stmt_error($stmt) . "</div>";
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            echo "<div class='alert alert-danger'>Query Error: " . mysqli_error($koneksi) . "</div>";
+        }
     }
 }
 ?>
@@ -74,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <a href="pasien_tambah.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="fa fa-user-plus"></i> Tambah Pasien</a>
             <a href="kunjungan_tambah.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="fa fa-calendar-plus"></i> Jadwal Kunjungan</a>
             <a href="kunjungan_list.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="fa fa-calendar"></i> Data Kunjungan</a>
+            
             <a href="login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white"><i class="fa fa-right-from-bracket"></i> Logout</a>
         </div>
     </div>
