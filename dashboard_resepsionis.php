@@ -1,45 +1,97 @@
 <?php
+
 include 'koneksi.php';
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'Kasir') {
+
+// Jika ingin cek apakah user sudah login:
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'kasir') {
     header("Location: login.php");
     exit;
 }
-$user_name = $_SESSION['nama_lengkap'];
+
+
 ?>
+
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Dashboard Resepsionis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="d-flex" id="wrapper">
-    <div class="bg-dark text-white border-end sidebar-wrapper" id="sidebar-wrapper">
-        <div class="sidebar-heading p-4 text-center border-bottom text-primary fw-bold fs-5"><i class="fas fa-headset me-2"></i> RESEPSIONIS</div>
+
+<div id="wrapper" class="d-flex">
+
+    <div class="bg-dark border-right" id="sidebar-wrapper">
+        <div class="sidebar-heading text-white p-3 fs-4">Resepsionis</div>
+
         <div class="list-group list-group-flush">
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-search me-2"></i> Cari Pasien</a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-calendar-alt me-2"></i> Jadwal Kunjungan</a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-dollar-sign me-2"></i> Pembayaran (Kasir)</a>
+            <a href="dashboard_resepsionis.php" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-users"></i> Dashboard
+            </a>
+            <a href="pasien_list.php" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-users"></i> Data Pasien
+            </a>
+        
+
+            <a href="pasien_tambah.php" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-user-plus"></i> Tambah Pasien
+            </a>
+
+            <a href="kunjungan_tambah.php" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-calendar-plus"></i> Jadwal Kunjungan
+            </a>
+
+            <a href="kunjungan_list.php" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-calendar"></i> Data Kunjungan
+            </a>
+
+            <a href="../login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white">
+                <i class="fa fa-right-from-bracket"></i> Logout
+            </a>
         </div>
     </div>
-    <div id="page-content-wrapper">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm sticky-top">
+
+    <div id="page-content-wrapper" class="w-100">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
             <div class="container-fluid">
-                <button class="btn btn-outline-primary" id="sidebarToggle"><i class="fas fa-bars"></i> Menu</button>
-                <span class="navbar-text me-3 d-none d-md-inline">Selamat Datang, **<?php echo $user_name; ?>** (Resepsionis)!</span>
-                <a href="login.php?logout=true" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                <span class="navbar-brand">Dashboard Resepsionis</span>
             </div>
         </nav>
-        <div class="container-fluid py-4">
-            <h1 class="mb-4 text-primary"><i class="fas fa-calendar-check"></i> Antrian Hari Ini</h1>
-            <p class="lead">Lihat status kunjungan dan lakukan pendaftaran pasien baru.</p>
+
+        <div class="container-fluid mt-4">
+            <h3>Selamat Datang di Dashboard Resepsionis</h3>
+            <p>Pilih menu di samping untuk mengelola pasien & kunjungan.</p>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white p-3">
+                        <h4>Data Pasien</h4>
+                        <p>Kelola dan cari data pasien.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-success text-white p-3">
+                        <h4>Tambah Pasien</h4>
+                        <p>Daftarkan pasien baru.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-info text-white p-3">
+                        <h4>Jadwal Kunjungan</h4>
+                        <p>Buat jadwal kunjungan pasien.</p>
+                    </div>
+                </div>
             </div>
+
+        </div>
     </div>
+
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>document.getElementById("sidebarToggle").addEventListener("click", () => {document.getElementById("wrapper").classList.toggle("toggled");});</script>
+
 </body>
 </html>

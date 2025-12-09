@@ -2,24 +2,25 @@
 // cek_login.php
 include 'koneksi.php'; 
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Memastikan koneksi berhasil sebelum digunakan
-    if ($koneksi->connect_error) {
-        $_SESSION['login_error'] = 'Gagal terhubung ke database.';
-        header("Location: login.php");
-        exit;
-    }
+    
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-    $username = $koneksi->real_escape_string($_POST['username'] ?? '');
-    $password = $koneksi->real_escape_string($_POST['password'] ?? '');
-
-    // Query untuk mengambil data pengguna
-    $sql = "SELECT id_user, username, nama_lengkap, role, password FROM users WHERE username = '$username'";
-    $result = $koneksi->query($sql);
+    // Query menggunakan Prepared Statement MySQLi
+    $stmt = $koneksi->prepare("SELECT id_user, username, nama_lengkap, role, password FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
+        // Periksa password (asumsi password plain text di database)
         if ($password === $user['password']) {
             
             // Set session data
@@ -32,38 +33,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Arahkan ke dashboard sesuai role
             $role = strtolower($user['role']);
             
-            // --- LOGIKA PENGARAHAN YANG SUDAH KOREK ---
-            
             if ($role === 'kasir') {
-<<<<<<< HEAD
                 header("Location: dashboard_resepsionis.php"); 
             } elseif ($role === 'apoteker') {
-                // PATH SUDAH BENAR: Langsung masuk ke folder apoteker
-                header("Location: /BASIS-DATA/apoteker/dashboard_apoteker.php");
+                header("Location: apoteker/dashboard_apoteker.php");
             } elseif ($role === 'manajer') {
-                header("Location: dashboard_manajer.php");
+                header("Location: manajer/dashboard_manajer.php");
+            } elseif ($role === 'dokter') {
+                header("Location: dokter/dashboard_dokter.php");
             } else {
                 header("Location: dashboard_" . $role . ".php");
             }
-
-            // ----------------------------------------
 
             exit;
 
-=======
-                 // Resepsionis dalam permintaan Anda adalah Kasir dalam DB
-                header("Location: dashboard_resepsionis.php"); 
-                exit;
-            } elseif ($role === 'apoteker') {
-                 // Apoteker tidak diminta, jadi arahkan ke dashboard default jika ada
-                header("Location: dashboard.php"); 
-                exit;
-            } else {
-                 // Admin, Dokter, dan role lain
-                header("Location: dashboard_" . $role . ".php");
-                exit;
-            }
->>>>>>> 928d8940cd9a0bd0cc5792c5edb92d1cfbe2b6d6
         } else {
             $_SESSION['login_error'] = 'Password salah.';
         }
@@ -71,6 +54,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['login_error'] = 'Username tidak ditemukan.';
     }
 
+    $stmt->close();
+    
     // Kembali ke halaman login jika gagal
     header("Location: login.php");
     exit;
