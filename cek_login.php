@@ -2,10 +2,6 @@
 // cek_login.php
 include 'koneksi.php'; 
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $username = $_POST['username'] ?? '';
@@ -32,15 +28,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Arahkan ke dashboard sesuai role
             $role = strtolower($user['role']);
-            
+            // echo $role;
+            // exit;
             if ($role === 'kasir') {
                 header("Location: dashboard_resepsionis.php"); 
             } elseif ($role === 'apoteker') {
                 header("Location: apoteker/dashboard_apoteker.php");
-            } elseif ($role === 'manajer') {
+            } elseif ($role === 'manager') {
                 header("Location: manajer/dashboard_manajer.php");
             } elseif ($role === 'dokter') {
-                header("Location: dokter/dashboard_dokter.php");
+                header("Location: dashboard_dokter.php");
             } else {
                 header("Location: dashboard_" . $role . ".php");
             }

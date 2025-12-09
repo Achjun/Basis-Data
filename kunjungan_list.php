@@ -1,7 +1,8 @@
 <?php
 include 'koneksi.php';
 
-// Ambil semua data kunjungan dengan join ke tabel pasien, dokter, dan poli
+// PERBAIKAN QUERY:
+// Join Poli dilakukan ke tabel DOKTER (d.id_poli), bukan kunjungan.
 $sql = "SELECT k.no_kunjungan, 
                p.nama_pasien, 
                d.nama_dokter, 
@@ -12,14 +13,14 @@ $sql = "SELECT k.no_kunjungan,
         FROM kunjungan k
         JOIN pasien p ON k.no_pasien = p.no_pasien
         JOIN dokter d ON k.no_dokter = d.no_dokter
-        JOIN poli po ON k.id_poli = po.id_poli
+        JOIN poli po ON d.id_poli = po.id_poli  
         ORDER BY k.tgl_periksa DESC";
 
-// Menggunakan MySQLi
-$result = $koneksi->query($sql);
-$kunjungan = $result->fetch_all(MYSQLI_ASSOC); // Ambil semua hasil
+$result = mysqli_query($koneksi, $sql);
 
-// ... sisa kode HTML (tidak berubah)
+if (!$result) {
+    die("Query Error: " . mysqli_error($koneksi));
+}
 ?>
 
 <!DOCTYPE html>
@@ -29,9 +30,10 @@ $kunjungan = $result->fetch_all(MYSQLI_ASSOC); // Ambil semua hasil
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-</head>
+    </head>
 <body>
-    <div id="wrapper" class="d-flex">
+
+<div id="wrapper" class="d-flex">
 
     <div class="bg-dark border-right" id="sidebar-wrapper">
         <div class="sidebar-heading text-white p-3 fs-4">Resepsionis</div>
@@ -57,12 +59,12 @@ $kunjungan = $result->fetch_all(MYSQLI_ASSOC); // Ambil semua hasil
                 <i class="fa fa-calendar"></i> Data Kunjungan
             </a>
 
-            <a href="../login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white">
+            <a href="login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white">
                 <i class="fa fa-right-from-bracket"></i> Logout
             </a>
         </div>
     </div>
-<div class="container mt-4">
+    <div class="container mt-4">
     <h3>Daftar Kunjungan</h3>
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
@@ -77,17 +79,19 @@ $kunjungan = $result->fetch_all(MYSQLI_ASSOC); // Ambil semua hasil
             </tr>
         </thead>
         <tbody>
-            <?php $no=1; foreach($kunjungan as $k): ?>
+            <?php 
+            $no = 1;
+            while ($k = mysqli_fetch_assoc($result)): 
+            ?>
             <tr>
                 <td><?= $no++ ?></td>
                 <td><?= $k['nama_pasien'] ?></td>
                 <td><?= $k['nama_dokter'] ?></td>
-                <td><?= $k['nama_poli'] ?></td>
-                <td><?= $k['keluhan'] ?></td>
+                <td><?= $k['nama_poli'] ?></td> <td><?= $k['keluhan'] ?></td>
                 <td><?= $k['tgl_periksa'] ?></td>
                 <td><?= $k['status'] ?></td>
             </tr>
-            <?php endforeach; ?>
+            <?php endwhile; ?>
         </tbody>
     </table>
 </div>

@@ -123,7 +123,6 @@ if ($mode === 'daftar') {
             <a href="pemrosesan_resep.php" class="list-group-item list-group-item-action bg-dark text-white active"><i class="fas fa-prescription-bottle-alt me-2"></i> Pemrosesan Resep</a>
             
             <a href="manajemen_stok.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-boxes me-2"></i> Manajemen Stok</a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white"><i class="fas fa-history me-2"></i> Riwayat Pengeluaran</a>
         </div>
     </div>
     <div id="page-content-wrapper">

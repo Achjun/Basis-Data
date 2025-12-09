@@ -1,6 +1,6 @@
 <?php
 include 'koneksi.php';
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'Dokter') {
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'dokter') {
     header("Location: login.php");
     exit;
 }

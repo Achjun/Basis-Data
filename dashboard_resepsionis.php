@@ -3,7 +3,7 @@
 include 'koneksi.php';
 
 // Jika ingin cek apakah user sudah login:
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'kasir') {
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'Kasir') {
     header("Location: login.php");
     exit;
 }
@@ -48,7 +48,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'kasir') {
                 <i class="fa fa-calendar"></i> Data Kunjungan
             </a>
 
-            <a href="../login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white">
+            <a href="login.php?logout=true" class="list-group-item list-group-item-action bg-dark text-white">
                 <i class="fa fa-right-from-bracket"></i> Logout
             </a>
         </div>
